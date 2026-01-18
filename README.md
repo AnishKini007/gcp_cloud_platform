@@ -1,46 +1,57 @@
-# GCP Cloud Infrastructure Platform with Terraform & CI/CD
+# GCP Cloud Infrastructure Platform with Terraform & AI
 
-A production-grade Google Cloud Platform infrastructure platform demonstrating enterprise-level cloud architecture, Infrastructure as Code (IaC), CI/CD automation, and cloud-native application deployment.
+A production-grade Google Cloud Platform infrastructure demonstrating enterprise-level cloud architecture, Infrastructure as Code (IaC), microservices deployment, and AI-powered infrastructure monitoring.
 
 ## 🎯 Project Overview
 
-This project showcases a comprehensive GCP cloud infrastructure platform built from scratch, managing 15+ GCP services with Terraform IaC, automated CI/CD pipelines, and enterprise-grade observability and security practices.
+This project showcases a comprehensive GCP cloud infrastructure platform built from scratch, managing 15+ GCP services with Terraform IaC, containerized microservices on Kubernetes, and an AI-powered chat assistant using Vertex AI Gemini.
 
-### 🌐 **[Access Portal Dashboard →](http://PORTAL_IP)** ← Single entry point for all resources!
+### 🌐 Live Services
+
+- **Portal Dashboard**: http://35.244.59.139 - Unified dashboard with real-time service monitoring
+- **API Service**: http://34.47.232.24/docs - FastAPI with interactive documentation
+- **Worker Service**: http://34.47.246.239/metrics - Background processor with live metrics
+- **AI Chat Assistant**: http://34.180.1.157 - Chat with AI about your infrastructure
 
 ### Key Achievements
 
-- ✅ **Unified Portal Dashboard**: Single web interface to access all platform resources
-- ✅ **Infrastructure as Code**: Complete Terraform-managed GCP infrastructure with modular, reusable components
-- ✅ **15+ GCP Services**: GKE, Cloud SQL, BigQuery, Cloud Storage, Pub/Sub, and more
-- ✅ **GitOps CI/CD**: Automated deployment pipelines with Cloud Build and Cloud Deploy
+- ✅ **AI-Powered Monitoring**: Vertex AI Gemini chatbot for infrastructure insights
+- ✅ **Real-Time Dashboard**: Live health checks and service status monitoring
+- ✅ **Infrastructure as Code**: Complete Terraform-managed GCP infrastructure
+- ✅ **15+ GCP Services**: GKE, Cloud SQL, BigQuery, Cloud Storage, Pub/Sub, Vertex AI
+- ✅ **Cloud Build CI/CD**: Automated container builds and deployments
 - ✅ **Enterprise Security**: IAM with Workload Identity for zero-credential architecture
-- ✅ **99.9% Uptime SLA**: Comprehensive monitoring with 20+ critical metrics
-- ✅ **Multi-Region HA**: 5-minute RTO with automatic failover capabilities
+- ✅ **Multi-Region HA**: Clusters in Mumbai and Singapore regions
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Cloud Load Balancer                       │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-   ┌────▼─────┐            ┌─────▼────┐
-   │ Region 1 │            │ Region 2 │
-   │   (US)   │            │   (EU)   │
-   └────┬─────┘            └─────┬────┘
-        │                         │
-   ┌────▼──────────┐        ┌────▼──────────┐
-   │  GKE Cluster  │        │  GKE Cluster  │
-   │  (Primary)    │◄──────►│  (Failover)   │
-   └────┬──────────┘        └────┬──────────┘
-        │                         │
-   ┌────▼─────┐            ┌─────▼────┐
-   │ Cloud SQL│            │ Cloud SQL│
-   │ (Primary)│◄──────────►│ (Replica)│
-   └──────────┘            └──────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                     Portal Dashboard (Next.js)                    │
+│              Real-time health monitoring & navigation             │
+└────────────────────────┬─────────────────────────────────────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+   ┌────▼─────┐    ┌────▼─────┐    ┌────▼──────┐
+   │   API    │    │  Worker  │    │ Frontend  │
+   │ Service  │    │ Service  │    │   Chat    │
+   │ FastAPI  │    │ Pub/Sub  │    │    AI     │
+   └────┬─────┘    └────┬─────┘    └────┬──────┘
+        │               │               │
+        └───────┬───────┴───────┬───────┘
+                │               │
+   ┌────────────▼───────────────▼────────────┐
+   │        GKE Cluster (asia-south1)        │
+   │     3 Microservices with HPA & LB       │
+   └────────────┬─────────────────────────────┘
+                │
+   ┌────────────┼──────────────┬──────────────┐
+   │            │              │              │
+┌──▼───┐  ┌───▼────┐  ┌──────▼─────┐  ┌─────▼──────┐
+│Cloud │  │BigQuery│  │  Pub/Sub   │  │ Vertex AI  │
+│ SQL  │  │        │  │            │  │   Gemini   │
+└──────┘  └────────┘  └────────────┘  └────────────┘
 ```
 
 ## 🛠️ Technology Stack
@@ -121,273 +132,723 @@ gcp_cloud_platform/
     └── TROUBLESHOOTING.md         # Common issues
 ```
 
-## 🚀 Getting Started
+## 🚀 Complete Deployment Guide
 
 ### Prerequisites
 
-- ✅ GCP Account with billing enabled
-- ✅ `gcloud` CLI installed and configured ([Download](https://cloud.google.com/sdk/docs/install))
-- ✅ Terraform >= 1.6.0 ([Download](https://www.terraform.io/downloads))
-- ✅ `kubectl` installed ([Install Guide](https://kubernetes.io/docs/tasks/tools/))
-- ✅ Docker Desktop installed (for local development) - Optional
+Before starting, ensure you have:
 
-### Quick Start (Windows)
+- ✅ **GCP Account** with billing enabled
+- ✅ **Google Cloud SDK** installed ([Download](https://cloud.google.com/sdk/docs/install))
+- ✅ **Terraform** >= 1.0 ([Download](https://www.terraform.io/downloads))
+- ✅ **kubectl** CLI tool ([Install Guide](https://kubernetes.io/docs/tasks/tools/))
+- ✅ **Git** for cloning the repository
 
-**Option 1: Automated Setup (Recommended)**
+### Step-by-Step Deployment
+
+#### Step 1: Initial GCP Setup
+
 ```powershell
-# Run the quick start script - does everything automatically
-.\quick-start.ps1
+# Login to Google Cloud
+gcloud auth login
+gcloud auth application-default login
+
+# Set your project ID (create new project in console first if needed)
+$PROJECT_ID = "your-project-id"
+gcloud config set project $PROJECT_ID
+
+# Enable all required APIs (takes 2-3 minutes)
+gcloud services enable compute.googleapis.com `
+  container.googleapis.com `
+  sqladmin.googleapis.com `
+  storage.googleapis.com `
+  bigquery.googleapis.com `
+  pubsub.googleapis.com `
+  artifactregistry.googleapis.com `
+  cloudbuild.googleapis.com `
+  aiplatform.googleapis.com `
+  servicenetworking.googleapis.com
 ```
 
-**Option 2: Manual Setup**
+#### Step 2: Create Terraform Backend
 
-1. **Clone or navigate to the repository**
-   ```powershell
-   cd gcp_cloud_platform
-   ```
-
-2. **Run initial setup**
-   ```powershell
-   .\scripts\setup.ps1
-   ```
-   This will:
-   - Enable required GCP APIs
-   - Create Terraform state bucket
-   - Create Artifact Registry
-   - Generate configuration files
-
-3. **Deploy infrastructure**
-   ```powershell
-   cd terraform\environments\prod
-   terraform init
-   terraform plan
-   terraform apply
-   ```
-   ⏱️ Takes approximately 15-20 minutes
-
-4. **Configure kubectl**
-   ```powershell
-   gcloud container clusters get-credentials gcp-platform-primary `
-     --region=asia-south1 `
-     --project=YOUR_PROJECT_ID
-   ```
-
-5. **Deploy applications**
-   ```powershell
-   cd ..\..\..
-   kubectl apply -f kubernetes\base\
-   ```
-
-6. **Get your portal URL** (takes 2-3 minutes for LoadBalancer)
-   ```powershell
-   kubectl get service portal -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
-   ```
-   
-   **🎯 Visit `http://<IP>` - This is your single entry point for everything!**
-
-### Quick Deploy Portal Only
-🌟 Portal Dashboard
-
-The **GCP Platform Portal** is your single, unified entry point to access all platform resources:
-
-### What's Included
-
-- 📊 **Real-time Service Status**: Monitor health of all microservices
-- 🔗 **Quick Access Links**: One-click access to:
-  - GCP Console & Project Dashboard
-  - GKE Clusters Management
-  - Cloud SQL Databases
-  - Cloud Monitoring & Dashboards
-  - Cloud Logging & Traces
-  - BigQuery Data Warehouse
-  - Cloud Storage Buckets
-  - Cloud Build Pipelines
-  - API & Frontend Services
-- 🎨 **Modern UI**: Clean, responsive design with dark mode
-- ⚡ **Fast**: Built with Next.js 14, optimized for performance
-- 📱 **Responsive**: Works on desktop, tablet, and mobile
-
-### Access Portal
-
-After deployment, get your portal URL:
 ```powershell
-kubectl get service portal -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+# Create Cloud Storage bucket for Terraform state
+gsutil mb -p $PROJECT_ID -l asia-south1 gs://${PROJECT_ID}-terraform-state
+
+# Enable versioning for state backup
+gsutil versioning set on gs://${PROJECT_ID}-terraform-state
 ```
 
-Visit: `http://<EXTERNAL-IP>`
+#### Step 3: Configure Terraform Variables
 
-Or use the quick deploy script:
 ```powershell
-.\scripts\deploy-portal.ps1
+cd terraform
+
+# Create terraform.tfvars file
+@"
+project_id = "$PROJECT_ID"
+region     = "asia-south1"
+zone       = "asia-south1-a"
+
+# Database settings
+db_name     = "production_db"
+db_user     = "admin"
+db_password = "YourSecurePassword123!"  # Change this!
+
+# Network settings
+vpc_name = "gcp-vpc"
+"@ | Out-File -FilePath terraform.tfvars -Encoding utf8
 ```
 
-## 
-```powershell
-.\scripts\deploy-portal.ps1
+#### Step 4: Update Backend Configuration
+
+Edit `terraform/main.tf` and update the backend:
+
+```hcl
+terraform {
+  backend "gcs" {
+    bucket = "your-project-id-terraform-state"  # Replace with your bucket name
+    prefix = "terraform/state"
+  }
+}
 ```
 
-This deploys just the portal dashboard and opens it in your browser automatically.
+#### Step 5: Deploy Infrastructure
 
-### For Linux/Mac Users
+```powershell
+# Initialize Terraform
+terraform init
 
-Replace PowerShell scripts with bash equivalents:
-```bash
-./scripts/setup.sh          # Instead of setup.ps1
-./cicd/setup-triggers.sh    # Instead of setup-triggers.ps1
+# Review what will be created
+terraform plan
+
+# Deploy infrastructure (takes 10-15 minutes)
+terraform apply -auto-approve
 ```
 
-## 📊 Key Features
+**What gets created:**
+- 2 GKE clusters (asia-south1, asia-southeast1)
+- Cloud SQL PostgreSQL (primary + read replica)
+- BigQuery dataset
+- 4 Cloud Storage buckets
+- Pub/Sub topics and subscriptions
+- VPC network with firewall rules
+- IAM service accounts
+- Artifact Registry repository
 
-### 1. Infrastructure as Code (Terraform)
-- Modular, reusable Terraform modules
-- Multi-environment support (dev, staging, prod)
-- Remote state management with Cloud Storage
-- State locking with Cloud Storage
+#### Step 6: Configure kubectl Access
 
-### 2. CI/CD Automation
-- GitOps-based deployment workflow
-- Automated testing and security scanning
-- Container image vulnerability scanning
-- Automated rollback capabilities
-- Blue-green and canary deployments
-
-### 3. Security & IAM
-- Workload Identity for pod-to-GCP authentication
-- Principle of least privilege IAM policies
-- Secret management with Secret Manager
-- Network security with VPC Service Controls
-- Pod Security Policies
-
-### 4. Observability
-- **Metrics**: 20+ critical application and infrastructure metrics
-- **Logging**: Centralized logging with Cloud Logging
-- **Tracing**: Distributed tracing with Cloud Trace
-- **Dashboards**: Custom Grafana dashboards
-- **Alerting**: PagerDuty/Slack integration
-
-### 5. High Availability
-- Multi-region deployment (US and EU)
-- Automatic failover with Health Checks
-- Database replication (Cloud SQL)
-- 99.9% uptime SLA
-- 5-minute Recovery Time Objective (RTO)
-
-## 🔧 Management Commands
-
-### Deploy Infrastructure
 ```powershell
-cd terraform\environments\prod
-terraform apply
+# Get credentials for primary GKE cluster
+gcloud container clusters get-credentials primary-gke-cluster `
+  --region=asia-south1 `
+  --project=$PROJECT_ID
+
+# Verify connection
+kubectl get nodes
+# You should see 3 nodes running
 ```
 
-### Deploy Applications
+#### Step 7: Build and Deploy Services
+
+**7.1 Deploy API Service**
+
 ```powershell
-gcloud builds submit --config=cicd\cloudbuild\cloudbuild.yaml
+cd ..\applications\api-service
+
+# Build container image with Cloud Build (takes 3-5 minutes)
+gcloud builds submit --config cloudbuild.yaml `
+  --substitutions=_PROJECT_ID=$PROJECT_ID,_REGION=asia-south1
+
+# Deploy to Kubernetes
+kubectl apply -f ..\..\kubernetes\base\api-service.yaml
+
+# Wait for external IP (takes 2-3 minutes)
+kubectl get service api-service -w
+# Press Ctrl+C when EXTERNAL-IP appears
 ```
 
-### Scale GKE Cluster
-```powershell
-gcloud container clusters resize gcp-platform-primary `
-  --num-nodes=5 `
+**7.2 Deploy Worker Service**
 
-# Get portal URL
-kubectl get service portal -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```powershell
+cd ..\worker-service
+
+# Build image
+gcloud builds submit --config cloudbuild.yaml `
+  --substitutions=_PROJECT_ID=$PROJECT_ID,_REGION=asia-south1
+
+# Deploy to Kubernetes
+kubectl apply -f ..\..\kubernetes\base\worker-service.yaml
+
+# Verify pods are running
+kubectl get pods -l app=worker-service
 ```
 
-### Access Portal Dashboard
+**7.3 Deploy Frontend Chat**
+
 ```powershell
+cd ..\frontend
+
+# Build image
+gcloud builds submit --config cloudbuild.yaml `
+  --substitutions=_PROJECT_ID=$PROJECT_ID,_REGION=asia-south1
+
+# Deploy to Kubernetes
+kubectl apply -f ..\..\kubernetes\base\frontend.yaml
+
+# Wait for external IP
+kubectl get service frontend -w
+```
+
+**7.4 Deploy Portal Dashboard**
+
+```powershell
+cd ..\portal
+
+# Build image
+gcloud builds submit --config cloudbuild.yaml `
+  --substitutions=_PROJECT_ID=$PROJECT_ID,_REGION=asia-south1
+
+# Deploy to Kubernetes
+kubectl apply -f ..\..\kubernetes\base\portal.yaml
+
 # Get portal IP
-$PORTAL_IP = kubectl get service portal -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
-
-# Open in browser
-Start-Process "http://$PORTAL_IP"
-  --region=asia-south1
+kubectl get service portal -w
 ```
 
-### View Logs
-```powershell
-# Application logs
-kubectl logs -f deployment/api-service
+#### Step 8: Configure AI Workload Identity
 
-# Cloud Logging
-gcloud logging read "resource.type=k8s_cluster" --limit=50
+```powershell
+# Create service account for API service
+gcloud iam service-accounts create api-service-sa `
+  --display-name="API Service Account" `
+  --project=$PROJECT_ID
+
+# Grant Vertex AI permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID `
+  --member="serviceAccount:api-service-sa@${PROJECT_ID}.iam.gserviceaccount.com" `
+  --role="roles/aiplatform.user"
+
+# Bind Kubernetes SA to GCP SA
+gcloud iam service-accounts add-iam-policy-binding `
+  api-service-sa@${PROJECT_ID}.iam.gserviceaccount.com `
+  --role roles/iam.workloadIdentityUser `
+  --member "serviceAccount:${PROJECT_ID}.svc.id.goog[default/api-service]"
+
+# Annotate Kubernetes service account
+kubectl annotate serviceaccount api-service `
+  iam.gke.io/gcp-service-account=api-service-sa@${PROJECT_ID}.iam.gserviceaccount.com
+
+# Restart API pods to pick up new identity
+kubectl rollout restart deployment api-service
 ```
 
-### Monitor Metrics
-```powershell
-# Open Cloud Monitoring Dashboard
-Start-Process "https://console.cloud.google.com/monitoring"
+#### Step 9: Get Your Service URLs
 
-# Or port-forward Grafana (if deployed)
-kubectl port-forward svc/grafana 3000:3000
-# Then open http://localhost:3000
+```powershell
+# Get all service IPs
+echo "Portal Dashboard: http://$(kubectl get service portal -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+echo "API Documentation: http://$(kubectl get service api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')/docs"
+echo "Worker Metrics: http://$(kubectl get service worker-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')/metrics"
+echo "AI Chat Interface: http://$(kubectl get service frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
 ```
 
-### Quick Status Check
+#### Step 10: Update Portal Configuration (Important!)
+
+After getting all external IPs, update the portal to show correct service links:
+
+Edit `applications\portal\src\app\api\services\route.ts`:
+
+```typescript
+const services = [
+  {
+    name: 'API Service',
+    url: 'http://YOUR_API_IP/docs',  // Replace with actual IP from step 9
+    healthUrl: 'http://YOUR_API_IP/health',
+    // ...
+  },
+  {
+    name: 'Worker Service',
+    url: 'http://YOUR_WORKER_IP/metrics',  // Replace with actual IP
+    healthUrl: 'http://YOUR_WORKER_IP/health',
+    // ...
+  },
+  {
+    name: 'Frontend App',
+    url: 'http://YOUR_FRONTEND_IP',  // Replace with actual IP
+    healthUrl: 'http://YOUR_FRONTEND_IP',
+    // ...
+  }
+];
+```
+
+Then rebuild and redeploy the portal:
+
 ```powershell
-# Check all resources
+cd applications\portal
+gcloud builds submit --config cloudbuild.yaml `
+  --substitutions=_PROJECT_ID=$PROJECT_ID,_REGION=asia-south1
+kubectl rollout restart deployment portal
+```
+
+#### Step 11: Verify Everything Works
+
+```powershell
+# Check all pods are running
+kubectl get pods
+
+# Check all services have external IPs
+kubectl get services
+
+# Test API health
+curl http://YOUR_API_IP/health
+
+# Test worker metrics
+curl http://YOUR_WORKER_IP/metrics
+
+# Open portal in browser
+Start-Process "http://YOUR_PORTAL_IP"
+```
+
+### 🎉 You're Done!
+
+Access your unified platform dashboard at `http://YOUR_PORTAL_IP` where you can:
+- ✅ Monitor real-time health of all services
+- ✅ Access API documentation
+- ✅ View worker service metrics
+- ✅ Chat with AI assistant about your infrastructure
+
+## 📊 Features Overview
+
+### 1. Portal Dashboard (Next.js 14)
+- **Real-time Health Monitoring**: Auto-refreshing service status every 30 seconds
+- **One-Click Access**: Direct links to all services and GCP resources
+- **Service Cards**: Visual status indicators with clickable links
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Modern UI**: Clean interface with gradient backgrounds
+
+### 2. API Service (FastAPI)
+- **REST API**: Production-ready FastAPI endpoints
+- **Interactive Docs**: Swagger UI at `/docs` endpoint
+- **Health Checks**: `/health` endpoint for monitoring
+- **Vertex AI Integration**: `/chat` endpoint powered by Gemini 2.0
+- **Infrastructure Context**: AI assistant with real-time infrastructure knowledge
+- **Workload Identity**: Secure authentication without service account keys
+
+### 3. Worker Service (Python + Pub/Sub)
+- **Message Processing**: Consumes messages from Cloud Pub/Sub
+- **HTTP Metrics**: Real-time metrics at `/metrics` endpoint
+- **Health Monitoring**: Built-in health check endpoint
+- **Error Tracking**: Tracks processing errors and success rates
+- **Scalable**: Deployed with HPA (Horizontal Pod Autoscaler)
+
+### 4. AI Chat Interface (React + Vite)
+- **Conversational AI**: Chat with Gemini about your infrastructure
+- **Suggested Questions**: Quick-start prompts for common queries
+- **Real-time Responses**: Streaming AI responses with typing animation
+- **Infrastructure Awareness**: AI knows your deployment status, metrics, and health
+- **Modern UI**: Clean chat interface with message bubbles
+
+### 5. Infrastructure as Code (Terraform)
+- **Multi-Region Deployment**: Clusters in Mumbai and Singapore
+- **15+ GCP Services**: Complete infrastructure automation
+- **Remote State**: Terraform state stored in Cloud Storage
+- **Modular Design**: Reusable modules for each service
+- **Version Control**: All infrastructure defined in code
+
+### 6. Cloud Build CI/CD
+- **Automated Builds**: Container images built in the cloud
+- **No Docker Required**: Uses Cloud Build instead of local Docker
+- **Artifact Registry**: Images stored in GCP Artifact Registry
+- **Fast Builds**: Parallel builds with caching
+- **Secure**: No credentials needed, uses GCP IAM
+
+### 7. Security & IAM
+- **Workload Identity**: Pods authenticate as GCP service accounts
+- **Zero Keys**: No service account JSON keys stored anywhere
+- **Least Privilege**: Each service has minimal required permissions
+- **Network Security**: VPC with firewall rules
+- **Encrypted Storage**: All data encrypted at rest
+
+## 🎯 What Makes This Special
+
+### AI-Powered Infrastructure Monitoring
+Unlike traditional dashboards, this platform includes an AI assistant that can:
+- Answer questions about your infrastructure in natural language
+- Check real-time service health and metrics
+- Explain what services are doing
+- Help troubleshoot issues
+
+**Example conversations:**
+```
+User: "What is the current health status of the infrastructure?"
+AI: "The infrastructure appears healthy overall. The API Service is running 
+     with 3 pods. The Worker Service has processed 2 messages with 0 errors..."
+
+User: "How many messages has the worker processed?"
+AI: "The Worker Service has processed a total of 2 messages with 0 errors. 
+     The last message was processed at 2026-01-18T18:31:45..."
+```
+
+### Unified Entry Point
+**Single Portal Dashboard** provides access to:
+- All deployed microservices
+- GCP Console resources (GKE, Cloud SQL, BigQuery)
+- Service health monitoring
+- Direct links to documentation
+- AI chat assistant
+
+No need to remember multiple URLs or navigate complex console menus.
+
+### Real Production Architecture
+This isn't just a demo - it's production-grade infrastructure featuring:
+- Multi-region high availability
+- Horizontal pod autoscaling
+- Database replication
+- Load balancing
+- Monitoring and alerting
+- Security best practices
+
+## 💰 Cost Breakdown
+
+**Daily Running Costs** (all regions, all services):
+
+| Service | Cost/Day | Notes |
+|---------|----------|-------|
+| GKE Clusters (2x) | ~$6.00 | 2 regional clusters, 3 nodes each |
+| Cloud SQL | ~$0.90 | Primary + read replica |
+| Load Balancers (4x) | ~$0.60 | One per service |
+| Cloud Storage | ~$0.20 | 4 buckets, minimal usage |
+| Pub/Sub | ~$0.10 | Low message volume |
+| BigQuery | ~$0.10 | Storage only, no queries |
+| Networking | ~$0.10 | Inter-region traffic |
+| **Total** | **~$8.00/day** | **~$240/month** |
+
+**Cost Optimization:**
+- Pause GKE clusters when not in use: Saves ~$6/day
+- Use single region: Saves ~$3/day
+- Reduce node count: Saves ~$2/day per node
+- Scale down during off-hours: Saves 50-70%
+
+**For demonstration purposes** (running 1-2 days): ~$15-20 total
+
+## �️ Management & Operations
+
+### Monitoring Commands
+
+```powershell
+# Check all services status
 kubectl get all
 
-# Check pod health
+# Check pod health and details
 kubectl get pods -o wide
 
-# Check service endpoints
+# View service endpoints and IPs
 kubectl get services
 
 # Check recent events
-kubectl get events --sort-by='.lastTimestamp'
+kubectl get events --sort-by='.lastTimestamp' --limit=20
+
+# View application logs
+kubectl logs -f deployment/api-service
+kubectl logs -f deployment/worker-service
+kubectl logs -f deployment/frontend
+
+# Check resource usage
+kubectl top nodes
+kubectl top pods
 ```
 
-## 🎯 Use Cases Demonstrated
+### Scaling Operations
 
-1. **Microservices Architecture**: Deploy and manage multiple containerized services
-2. **Data Pipeline**: Pub/Sub → Cloud Functions → BigQuery ETL pipeline
-3. **Serverless Computing**: Cloud Functions for event-driven processing
-4. **Database Management**: High-availability PostgreSQL with read replicas
-5. **API Gateway**: Cloud Endpoints or Cloud Load Balancing
-6. **Batch Processing**: Dataflow jobs for large-scale data processing
+```powershell
+# Scale specific deployment manually
+kubectl scale deployment api-service --replicas=5
 
-## 📈 Performance Metrics
+# Scale GKE cluster nodes
+gcloud container clusters resize primary-gke-cluster `
+  --num-nodes=5 `
+  --region=asia-south1
 
-- **Deployment Time**: < 10 minutes (automated)
-- **Uptime SLA**: 99.9%
-- **Recovery Time Objective (RTO)**: 5 minutes
-- **Recovery Point Objective (RPO)**: 1 minute
-- **API Response Time**: < 100ms (p95)
-- **Build Time**: < 5 minutes
+# View HPA (Horizontal Pod Autoscaler) status
+kubectl get hpa
+```
 
-## 🔐 Security Best Practices
+### Debugging & Troubleshooting
 
-- ✅ Workload Identity (no service account keys)
-- ✅ Encrypted secrets with Secret Manager
-- ✅ Private GKE clusters
-- ✅ VPC Service Controls
-- ✅ Binary Authorization
-- ✅ Container image scanning
-- ✅ Network policies
-- ✅ Cloud Armor for DDoS protection
+```powershell
+# Describe pod for detailed info
+kubectl describe pod <pod-name>
 
-## 📚 Learning Resources
+# Get into a running container
+kubectl exec -it <pod-name> -- /bin/bash
 
-- [GCP Documentation](https://cloud.google.com/docs)
-- [Terraform GCP Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
-- [GKE Best Practices](https://cloud.google.com/kubernetes-engine/docs/best-practices)
+# View service details
+kubectl describe service api-service
+
+# Check deployments status
+kubectl rollout status deployment/api-service
+
+# View deployment history
+kubectl rollout history deployment/api-service
+
+# Rollback to previous version
+kubectl rollout undo deployment/api-service
+```
+
+### Cost Management
+
+```powershell
+# Stop GKE clusters to save costs (use during breaks)
+gcloud container clusters resize primary-gke-cluster `
+  --num-nodes=0 `
+  --region=asia-south1
+
+# Resume GKE clusters
+gcloud container clusters resize primary-gke-cluster `
+  --num-nodes=3 `
+  --region=asia-south1
+
+# Destroy everything (WARNING: Deletes all resources)
+cd terraform
+terraform destroy -auto-approve
+```
+
+**Cost Estimate:**
+- **Running continuously**: ~$7-8 per day (~$210-240/month)
+- **Running 8 hours/day**: ~$3-4 per day (~$90-120/month)
+
+Main cost drivers:
+- GKE clusters: ~$6/day (2 regional clusters with 3 nodes each)
+- Cloud SQL: ~$0.90/day (primary + replica)
+- Load Balancers: ~$0.60/day (4 LoadBalancer services)
+- Other services: ~$0.50/day (storage, networking, etc.)
+
+## 🔧 Troubleshooting Guide
+
+### Common Issues and Solutions
+
+#### Issue 1: Terraform State Bucket Not Found
+**Error:** `Error: Failed to get existing workspaces: storage: bucket doesn't exist`
+
+**Solution:**
+```powershell
+# Create the state bucket manually
+gsutil mb -p $PROJECT_ID -l asia-south1 gs://${PROJECT_ID}-terraform-state
+gsutil versioning set on gs://${PROJECT_ID}-terraform-state
+
+# Re-run terraform init
+terraform init
+```
+
+#### Issue 2: ImagePullBackOff on Kubernetes Pods
+**Error:** `Failed to pull image... unauthorized: authentication required`
+
+**Solution:**
+```powershell
+# Configure GKE to access Artifact Registry
+gcloud projects add-iam-policy-binding $PROJECT_ID `
+  --member="serviceAccount:$(gcloud iam service-accounts list --format='value(email)' --filter='displayName:Compute Engine default service account')" `
+  --role="roles/artifactregistry.reader"
+
+# Delete and recreate the pod
+kubectl delete pod <pod-name>
+```
+
+#### Issue 3: Service Stuck in Pending (No External IP)
+**Error:** Service shows `<pending>` for EXTERNAL-IP
+
+**Solution:**
+```powershell
+# Wait 2-3 minutes - LoadBalancers take time to provision
+kubectl get service <service-name> -w
+
+# If still pending after 5 minutes, check events
+kubectl describe service <service-name>
+
+# Check if you've hit quota limits
+gcloud compute project-info describe --project=$PROJECT_ID
+```
+
+#### Issue 4: Vertex AI Permission Denied
+**Error:** `403 Permission denied on resource project`
+
+**Solution:**
+```powershell
+# Ensure Vertex AI API is enabled
+gcloud services enable aiplatform.googleapis.com
+
+# Re-apply Workload Identity binding (from Step 8)
+gcloud iam service-accounts add-iam-policy-binding `
+  api-service-sa@${PROJECT_ID}.iam.gserviceaccount.com `
+  --role roles/iam.workloadIdentityUser `
+  --member "serviceAccount:${PROJECT_ID}.svc.id.goog[default/api-service]"
+
+# Restart API pods
+kubectl rollout restart deployment api-service
+```
+
+#### Issue 5: Gemini Model Not Found
+**Error:** `Model gemini-pro is not found`
+
+**Solution:**
+The correct model name is `gemini-2.0-flash-exp` and it's only available in `us-central1` region.
+
+Check `applications/api-service/app/main.py`:
+```python
+VERTEX_REGION = "us-central1"  # Not asia-south1!
+gemini_model = GenerativeModel("gemini-2.0-flash-exp")  # Correct model name
+```
+
+#### Issue 6: Worker Service Shows 0/1 Ready
+**Error:** Pod shows `0/1` in READY column
+
+**Solution:**
+```powershell
+# Check pod logs
+kubectl logs <worker-pod-name>
+
+# Common cause: Health check failing
+# Ensure worker has HTTP server running on port 8080
+# Check applications/worker-service/app/main.py has:
+# app = Flask(__name__)
+# server = make_server('0.0.0.0', 8080, app)
+```
+
+#### Issue 7: Portal Doesn't Show Service Status
+**Error:** All services show as "Unknown" or health checks fail
+
+**Solution:**
+Update service URLs in `applications/portal/src/app/api/services/route.ts` with actual IPs:
+```powershell
+# Get all IPs
+kubectl get services
+
+# Edit portal config with real IPs
+# Then rebuild and redeploy
+cd applications\portal
+gcloud builds submit --config cloudbuild.yaml --substitutions=_PROJECT_ID=$PROJECT_ID,_REGION=asia-south1
+kubectl rollout restart deployment portal
+```
+
+#### Issue 8: Cloud Build Fails with Timeout
+**Error:** `Build timeout exceeded`
+
+**Solution:**
+```powershell
+# Increase timeout in cloudbuild.yaml
+# Add to each build step:
+timeout: '1200s'  # 20 minutes
+
+# Or use --timeout flag
+gcloud builds submit --config cloudbuild.yaml --timeout=20m
+```
+
+#### Issue 9: Out of Resources / Quota Exceeded
+**Error:** `Quota 'CPUS' exceeded. Limit: 24.0 in region asia-south1`
+
+**Solution:**
+```powershell
+# Request quota increase in GCP Console:
+# IAM & Admin > Quotas > Filter: "Compute Engine API" > Select quota > Request increase
+
+# Or reduce cluster size in terraform/main.tf:
+# node_count = 2  # Instead of 3
+```
+
+#### Issue 10: Terraform Apply Fails with Deletion Protection
+**Error:** `Error: deletion_protection is enabled`
+
+**Solution:**
+This happens when trying to destroy Cloud SQL instances. Either:
+
+**Option A:** Disable protection first
+```powershell
+# Edit terraform files to set:
+# deletion_protection = false
+
+# Then apply
+terraform apply
+terraform destroy
+```
+
+**Option B:** Manual deletion
+```powershell
+# Delete manually through console or:
+gcloud sql instances delete <instance-name> --quiet
+```
+
+### Getting Help
+
+If you encounter issues not listed here:
+
+1. **Check Kubernetes Events**: `kubectl get events --sort-by='.lastTimestamp'`
+2. **View Pod Logs**: `kubectl logs <pod-name>`
+3. **Describe Resources**: `kubectl describe pod/service/deployment <name>`
+4. **Check GCP Console**: Often shows clearer error messages
+5. **Enable Verbose Logging**: Add `-v=8` to kubectl commands for debug output
+
+## 📚 Additional Resources
+
+### GCP Documentation
+- [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/docs)
+- [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres)
+- [Vertex AI](https://cloud.google.com/vertex-ai/docs)
+- [Cloud Build](https://cloud.google.com/build/docs)
+- [Terraform on GCP](https://cloud.google.com/docs/terraform)
+
+### Learn More
+- [Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
+- [Terraform Best Practices](https://www.terraform-best-practices.com/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Next.js Documentation](https://nextjs.org/docs)
+
+### Related Projects
+This project demonstrates skills applicable to:
+- Cloud Application Development
+- DevOps Engineering
+- Site Reliability Engineering (SRE)
+- Platform Engineering
+- Cloud Architecture
 
 ## 🤝 Contributing
 
-This is a personal project for demonstration purposes. Feel free to fork and adapt for your own learning!
+This is a personal demonstration project. Feel free to:
+- Fork for your own learning
+- Adapt for your use cases
+- Share feedback or suggestions
 
-## 📝 License
+## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - Free to use for educational and personal projects.
 
-## 👤 Author
+## 👤 About
 
-**Anish Kini**
-- Demonstrates expertise in Cloud Application Development
-- Focus on production-grade infrastructure and automation
-- Enterprise-level security and observability practices
+**Project by Anish Kini**
+
+This project demonstrates:
+- ✅ End-to-end cloud infrastructure design and deployment
+- ✅ Infrastructure as Code (IaC) with Terraform
+- ✅ Containerized microservices architecture
+- ✅ CI/CD automation with Cloud Build
+- ✅ AI integration with Vertex AI
+- ✅ Production-grade security and monitoring
+- ✅ Cost-aware cloud resource management
+
+**Skills Showcased:**
+- Google Cloud Platform (GCP)
+- Terraform Infrastructure Automation
+- Kubernetes (GKE) Orchestration
+- Python (FastAPI, Flask)
+- JavaScript/TypeScript (Next.js, React)
+- Docker & Containerization
+- DevOps & CI/CD
+- Cloud Cost Optimization
+- AI/ML Integration (Vertex AI)
 
 ---
 
-**Note**: This project is designed to showcase real-world cloud engineering skills applicable to Cloud Application Developer roles, including infrastructure automation, CI/CD, security, and operational excellence.
+**Questions or Issues?** Check the [Troubleshooting Guide](#-troubleshooting-guide) above or open an issue in the repository.
+
+**Want to see it in action?** The live demo is available at the service URLs listed at the top of this README.
