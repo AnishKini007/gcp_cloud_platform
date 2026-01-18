@@ -1,0 +1,6 @@
+project_id          = "YOUR_GCP_PROJECT_ID"
+region              = "asia-south1"
+secondary_region    = "asia-southeast1"
+environment         = "prod"
+project_name        = "gcp-platform"
+notification_email  = "your-email@example.com"

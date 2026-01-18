@@ -1,0 +1,120 @@
+steps:
+  # Build Portal
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-portal'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/portal:$SHORT_SHA'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/portal:latest'
+      - './applications/portal'
+    waitFor: ['-']
+
+  # Build API Service
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-api'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/api-service:$SHORT_SHA'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/api-service:latest'
+      - './applications/api-service'
+    waitFor: ['-']
+
+  # Build Worker Service
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-worker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/worker-service:$SHORT_SHA'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/worker-service:latest'
+      - './applications/worker-service'
+    waitFor: ['-']
+
+  # Build Frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/frontend:$SHORT_SHA'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/frontend:latest'
+      - './applications/frontend'
+    waitFor: ['-']
+
+  # Push all images
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-images'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/portal'
+    waitFor: ['build-portal']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/api-service'
+    waitFor: ['build-api']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/worker-service'
+    waitFor: ['build-worker']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/frontend'
+    waitFor: ['build-frontend']
+
+  # Deploy to GKE
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'deploy-to-gke'
+    args:
+      - 'apply'
+      - '-f'
+      - 'kubernetes/base/'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=gcp-platform-primary'
+    waitFor: ['push-images']
+
+  # Get Portal URL
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'get-portal-url'
+    args:
+      - 'get'
+      - 'service'
+      - 'portal'
+      - '-o'
+      - 'jsonpath={.status.loadBalancer.ingress[0].ip}'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=gcp-platform-primary'
+    waitFor: ['deploy-to-gke']
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+images:
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/portal:$SHORT_SHA'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/portal:latest'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/api-service:$SHORT_SHA'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/api-service:latest'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/worker-service:$SHORT_SHA'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/worker-service:latest'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/frontend:$SHORT_SHA'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/gcp-platform/frontend:latest'
+
+timeout: 1800s

@@ -1,0 +1,66 @@
+# Cloud Build - Terraform Deployment Pipeline
+steps:
+  # Step 1: Terraform Format Check
+  - name: 'hashicorp/terraform:1.6'
+    id: 'fmt'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd terraform/environments/${_ENV}
+        terraform fmt -check -recursive
+
+  # Step 2: Terraform Init
+  - name: 'hashicorp/terraform:1.6'
+    id: 'init'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd terraform/environments/${_ENV}
+        terraform init
+
+  # Step 3: Terraform Validate
+  - name: 'hashicorp/terraform:1.6'
+    id: 'validate'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd terraform/environments/${_ENV}
+        terraform validate
+    waitFor: ['init']
+
+  # Step 4: Terraform Plan
+  - name: 'hashicorp/terraform:1.6'
+    id: 'plan'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd terraform/environments/${_ENV}
+        terraform plan -out=tfplan
+    waitFor: ['validate']
+
+  # Step 5: Terraform Apply (manual approval required)
+  - name: 'hashicorp/terraform:1.6'
+    id: 'apply'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd terraform/environments/${_ENV}
+        terraform apply -auto-approve tfplan
+    waitFor: ['plan']
+
+# Substitutions
+substitutions:
+  _ENV: prod
+
+# Options
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+# Timeout
+timeout: '1800s'

@@ -1,0 +1,140 @@
+# Cloud Build - Main Build Pipeline
+steps:
+  # Step 1: Run tests
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'test'
+    args:
+      - 'build'
+      - '--target=test'
+      - '-t'
+      - 'test-image'
+      - './applications/api-service'
+
+  # Step 2: Build application Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-api'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/api-service:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/api-service:latest'
+      - './applications/api-service'
+    waitFor: ['test']
+
+  # Step 3: Build worker service
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-worker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/worker-service:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/worker-service:latest'
+      - './applications/worker-service'
+
+  # Step 4: Build frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/frontend:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/frontend:latest'
+      - './applications/frontend'
+
+  # Step 5: Push images to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-api'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/api-service'
+    waitFor: ['build-api']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-worker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/worker-service'
+    waitFor: ['build-worker']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/frontend'
+    waitFor: ['build-frontend']
+
+  # Step 6: Security scanning
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'scan'
+    args:
+      - 'container'
+      - 'images'
+      - 'scan'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/api-service:${SHORT_SHA}'
+    waitFor: ['push-api']
+
+  # Step 7: Deploy to GKE using kubectl
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'deploy'
+    args:
+      - 'apply'
+      - '-f'
+      - 'kubernetes/overlays/${_ENV}/'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=${_REGION}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER}'
+    waitFor: ['scan', 'push-worker', 'push-frontend']
+
+  # Step 8: Update image tags in deployment
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'set-image'
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/api-service'
+      - 'api-service=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/api-service:${SHORT_SHA}'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=${_REGION}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER}'
+    waitFor: ['deploy']
+
+  # Step 9: Wait for rollout
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'rollout-status'
+    args:
+      - 'rollout'
+      - 'status'
+      - 'deployment/api-service'
+      - '--timeout=5m'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=${_REGION}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER}'
+    waitFor: ['set-image']
+
+# Substitutions
+substitutions:
+  _REGION: asia-south1
+  _ARTIFACT_REPO: gcp-platform
+  _ENV: prod
+  _GKE_CLUSTER: gcp-platform-primary
+
+# Options
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'
+
+# Timeout
+timeout: '1200s'
+
+# Images to store
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/api-service:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/worker-service:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/frontend:${SHORT_SHA}'

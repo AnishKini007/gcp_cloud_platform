@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-service
+  labels:
+    app: worker-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-service
+  template:
+    metadata:
+      labels:
+        app: worker-service
+        version: v1
+    spec:
+      serviceAccountName: worker-service
+      containers:
+      - name: worker-service
+        image: asia-south1-docker.pkg.dev/gcloud-platform-484321/gcp-platform/worker-service:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: GCP_PROJECT_ID
+          value: "gcloud-platform-484321"
+        - name: PUBSUB_SUBSCRIPTION
+          value: "gcp-platform-events-sub-prod"
+        - name: HTTP_PORT
+          value: "8080"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-service
+  labels:
+    app: worker-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: worker-service
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: worker-service
+  annotations:
+    iam.gke.io/gcp-service-account: gcp-platform-worker-prod@gcloud-platform-484321.iam.gserviceaccount.com
