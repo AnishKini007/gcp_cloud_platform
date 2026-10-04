@@ -6,12 +6,10 @@ A production-grade Google Cloud Platform infrastructure demonstrating enterprise
 
 This project showcases a comprehensive GCP cloud infrastructure platform built from scratch, managing 15+ GCP services with Terraform IaC, containerized microservices on Kubernetes, and an AI-powered chat assistant using Vertex AI Gemini.
 
-### 🌐 Live Services
+### 🌐 Deployment status
 
-- **Portal Dashboard**: http://35.244.59.139 - Unified dashboard with real-time service monitoring
-- **API Service**: http://34.47.232.24/docs - FastAPI with interactive documentation
-- **Worker Service**: http://34.47.246.239/metrics - Background processor with live metrics
-- **AI Chat Assistant**: http://34.180.1.157 - Chat with AI about your infrastructure
+The environment was deployed and tested in January 2026, then torn down to avoid ongoing cloud cost.
+Redeploy it with the steps in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ### Key Achievements
 
